@@ -4,9 +4,7 @@ import time
 
 app = FastAPI(title="AlertMate AI Server")
 
-# simple timer logic (demo)
 eye_start = None
-yawn_start = None
 
 @app.get("/")
 def root():
@@ -14,18 +12,23 @@ def root():
 
 @app.post("/upload")
 async def upload_image(request: Request):
-    global eye_start, yawn_start
+    global eye_start
 
     image = await request.body()
-    if len(image) < 1000:
+
+    # ignore invalid frames
+    if len(image) < 2000:
+        eye_start = None
         return PlainTextResponse("false")
 
-    # 🔴 DEMO LOGIC (replace with real AI later)
-    # simulate eye closed after 3 sec
     now = time.time()
+
+    # start timer
     if eye_start is None:
         eye_start = now
+        return PlainTextResponse("false")
 
+    # trigger only after 3 seconds CONTINUOUS
     if now - eye_start >= 3:
         return PlainTextResponse("true")
 
