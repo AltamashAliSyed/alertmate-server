@@ -1,39 +1,32 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from state_tracker import DriverState
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
+import time
 
-app = FastAPI(title="AlertMate Simple AI")
+app = FastAPI(title="AlertMate AI Server")
 
-state = DriverState()
-
-class DetectData(BaseModel):
-    eye_closed: bool
-    yawning: bool
+# simple timer logic (demo)
+eye_start = None
+yawn_start = None
 
 @app.get("/")
 def root():
     return {"status": "AlertMate Server Running"}
 
-@app.post("/detect")
-def detect(data: DetectData):
-    alert = False
-    reason = None
+@app.post("/upload")
+async def upload_image(request: Request):
+    global eye_start, yawn_start
 
-    if data.eye_closed:
-        if state.eye_closed_3s():
-            alert = True
-            reason = "EYE_CLOSED_3_SEC"
-    else:
-        state.reset_eye()
+    image = await request.body()
+    if len(image) < 1000:
+        return PlainTextResponse("false")
 
-    if data.yawning:
-        if state.yawn_3s():
-            alert = True
-            reason = "YAWN_3_SEC"
-    else:
-        state.reset_yawn()
+    # 🔴 DEMO LOGIC (replace with real AI later)
+    # simulate eye closed after 3 sec
+    now = time.time()
+    if eye_start is None:
+        eye_start = now
 
-    return {
-        "alert": alert,
-        "reason": reason
-    }
+    if now - eye_start >= 3:
+        return PlainTextResponse("true")
+
+    return PlainTextResponse("false")
